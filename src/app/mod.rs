@@ -1,42 +1,52 @@
 pub mod async_result;
+pub mod message;
+mod signal;
+pub mod signature;
 pub mod task;
-
-use std::sync::Arc;
-
+pub mod tracer;
+use self::message::Message;
+use self::signature::Signature;
+use self::tracer::TracerTrait;
 use crate::broker::Broker;
 use async_channel::{bounded, Receiver, Sender};
 use async_result::*;
-
-use log::{debug, error, info, warn};
+use log::{error, info, warn};
+use signal::*;
+use std::collections::HashMap;
+use std::sync::Arc;
 use task::*;
 use tokio::select;
 use tokio::sync::mpsc;
+use tokio::sync::RwLock;
 use tokio::time::{sleep, Duration};
 
 pub struct AsyncQueue {
     name: String,
     queue: String,
     broker: Arc<dyn Broker>,
+    task_builders: RwLock<HashMap<String, tracer::TraceBuilder>>,
 }
 
 impl AsyncQueue {
-    pub fn new(name: String, queue: String, broker: Box<dyn Broker>) -> AsyncQueue {
-        AsyncQueue {
+    pub fn new(name: String, queue: String, broker: Box<dyn Broker>) -> Arc<AsyncQueue> {
+        Arc::new(AsyncQueue {
             name: name,
             queue: queue,
             broker: Arc::from(broker),
-        }
+            task_builders: RwLock::new(HashMap::new()),
+        })
     }
 
-    pub fn client(&self) -> Result<Client, String> {
+    pub fn client(self: &Arc<Self>) -> Result<Client, String> {
         Ok(Client {
             queue: self.queue.clone(),
             broker: self.broker.clone(),
         })
     }
 
-    pub fn server(&self) -> Result<Server, String> {
+    pub fn server(self: &Arc<Self>) -> Result<Server, String> {
         Ok(Server {
+            app: self.clone(),
             queue: self.queue.clone(),
             broker: self.broker.clone(),
         })
@@ -44,6 +54,31 @@ impl AsyncQueue {
 
     pub fn get_info(&self) -> String {
         self.name.clone()
+    }
+
+    pub async fn register<T: AQTask + 'static>(&self) -> Result<(), String> {
+        let name = T::NAME;
+        let mut task_builders = self.task_builders.write().await;
+        if task_builders.contains_key(name) {
+            return Err(format!("duplicate task {}", name));
+        } else {
+            task_builders.insert(name.into(), Box::new(tracer::build_tarce::<T>));
+        }
+        Ok(())
+    }
+
+    pub async fn get_tracer(
+        self: &Arc<Self>,
+        name: String,
+        msg: Message,
+    ) -> Result<Box<dyn TracerTrait>, String> {
+        let task_builders = self.task_builders.read().await;
+        if let Some(builder) = task_builders.get(&name) {
+            let t = builder(msg)?;
+            Ok(t)
+        } else {
+            Err(format!("task not found: {}", name))
+        }
     }
 }
 
@@ -53,14 +88,16 @@ pub struct Client {
 }
 
 impl Client {
-    pub async fn submit(&self, t: &Task) -> Result<AsyncResult, String> {
-        let output = serde_json::to_string(t).map_err(|e| e.to_string())?;
+    pub async fn submit<T: AQTask>(&self, s: &Signature<T>) -> Result<AsyncResult, String> {
+        let msg = Message::try_from(s)?;
+        let output = msg.serialize()?;
         self.broker.enqueue(&self.queue, &output).await?;
-        Ok(AsyncResult::new(t.get_id(), self.broker.clone()))
+        Ok(AsyncResult::new(msg.get_id(), self.broker.clone()))
     }
 }
 
 pub struct Server {
+    app: Arc<AsyncQueue>,
     queue: String,
     broker: Arc<dyn Broker>,
 }
@@ -78,6 +115,7 @@ impl Server {
             let w = Worker {
                 id: i,
                 broker: self.broker.clone(),
+                app: self.app.clone(),
             };
             let rx = rx.clone();
             let token_tx = token_tx.clone();
@@ -143,6 +181,7 @@ impl Server {
 pub struct Worker {
     id: i32,
     broker: Arc<dyn Broker>,
+    app: Arc<AsyncQueue>,
 }
 
 impl Worker {
@@ -179,39 +218,21 @@ impl Worker {
     async fn handle(&self, val: String) -> Result<(), String> {
         let idx = self.id;
 
-        let task: Task = serde_json::from_str(&val[..]).map_err(|e| e.to_string())?;
-        let task_id = task.get_id();
-        let task_payload = String::from_utf8_lossy(task.get_payload());
-        info!("worker {}, got task {}, {}", idx, task_id, task_payload);
+        let msg: Message = serde_json::from_str(&val[..]).map_err(|e| e.to_string())?;
+        let id = msg.get_id();
+        let name = msg.get_name();
 
-        let res = "done".to_owned();
-        self.broker.set(&task_id, &res).await?;
-        info!("worker {}, write result to {}, {}", idx, task_id, res);
+        let payload = String::from_utf8_lossy(msg.get_payload());
+        info!("worker {}, got task {}, {}", idx, id, payload);
+
+        let result = self.handle_message(name, msg).await?;
+        self.broker.set(&id, &result).await?;
+        info!("worker {}, write result to {}, {}", idx, id, result);
         Ok(())
     }
-}
 
-#[allow(unused)]
-enum SigType {
-    /// Equivalent to SIGINT on unix systems.
-    Interrupt,
-    /// Equivalent to SIGTERM on unix systems.
-    Terminate,
-}
-
-#[cfg(windows)]
-struct Ender;
-
-#[cfg(windows)]
-impl Ender {
-    fn new() -> Result<Self, std::io::Error> {
-        Ok(Ender)
-    }
-
-    async fn wait(&mut self) -> Result<SigType, std::io::Error> {
-        info!("listening on signal");
-        tokio::signal::ctrl_c().await?;
-
-        Ok(SigType::Interrupt)
+    async fn handle_message(&self, name: String, msg: Message) -> Result<String, String> {
+        let mut tracer = self.app.get_tracer(name, msg).await?;
+        tracer.run().await
     }
 }
