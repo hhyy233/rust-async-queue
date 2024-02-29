@@ -83,5 +83,5 @@ async fn main() {
     async_queue_client(client).await.unwrap();
     let _ = h.await.unwrap();
 
-    println!("out");
+    println!("done");
 }
