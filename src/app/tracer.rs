@@ -31,7 +31,7 @@ where
     T: AQTask,
 {
     async fn run(&mut self) -> Result<String, String> {
-        let res = self.task.run()?;
+        let res = self.task.run();
         serde_json::to_string(&res).map_err(|e| e.to_string())
     }
 }

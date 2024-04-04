@@ -1,5 +1,5 @@
-mod redis;
-pub use self::redis::{RedisBroker, RedisBrokerBuilder};
+pub mod redis;
+pub use self::redis::RedisBrokerBuilder;
 
 use async_trait::async_trait;
 

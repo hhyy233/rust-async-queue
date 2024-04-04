@@ -1,5 +1,3 @@
-use log::info;
-
 use tokio::select;
 #[cfg(unix)]
 use tokio::signal::unix::{signal, Signal, SignalKind};

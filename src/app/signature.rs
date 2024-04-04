@@ -21,6 +21,7 @@ where
     pub fn new_with_id(id: String, params: T::Params) -> Self {
         Self { id, params }
     }
+
     pub fn get_id(&self) -> String {
         self.id.clone()
     }

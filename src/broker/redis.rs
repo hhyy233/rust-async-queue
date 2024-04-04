@@ -4,7 +4,8 @@ use redis::aio::ConnectionManager;
 use redis::Client;
 
 pub struct RedisBrokerBuilder {
-    url: String,
+    _url: String,
+    client: Client,
 }
 
 #[async_trait]
@@ -13,24 +14,27 @@ impl BrokerBuilder for RedisBrokerBuilder {
     where
         Self: Sized,
     {
+        let client = Client::open(broker_url.clone())
+            .map_err(|e| e.to_string())
+            .unwrap();
         return RedisBrokerBuilder {
-            url: broker_url.into(),
+            _url: broker_url.into(),
+            client: client,
         };
     }
 
     async fn build(&self, _timeout: u32) -> Result<Box<dyn Broker>, String> {
-        let client = Client::open(self.url.clone()).map_err(|e| e.to_string())?;
-        let manager = client
+        let manager = self
+            .client
             .get_tokio_connection_manager()
             .await
             .map_err(|e| e.to_string())?;
-        return Ok(Box::new(RedisBroker { client, manager }));
+        return Ok(Box::new(RedisBroker { manager }));
     }
 }
 
 #[derive(Clone)]
 pub struct RedisBroker {
-    client: Client,
     manager: ConnectionManager,
 }
 
@@ -48,7 +52,6 @@ impl Broker for RedisBroker {
 
     async fn set(&self, key: &String, val: &String) -> Result<(), String> {
         let mut conn = self.manager.clone();
-        println!("redis set {}, {}", key, val);
         redis::cmd("SET")
             .arg(key)
             .arg(val)
@@ -70,11 +73,7 @@ impl Broker for RedisBroker {
     async fn dequeue(&self, queue: &String) -> Result<Option<(String, String)>, String> {
         // we should create a new connection for blocking command.
         // https://github.com/redis-rs/redis-rs/issues/453
-        let mut conn = self
-            .client
-            .get_async_connection()
-            .await
-            .map_err(|e| e.to_string())?;
+        let mut conn = self.manager.clone();
         redis::cmd("BLPOP")
             .arg(queue)
             .arg(0) // no timeout

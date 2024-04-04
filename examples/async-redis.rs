@@ -1,10 +1,10 @@
-use env_logger::Env;
 use rust_async_queue::app::*;
-use rust_async_queue::broker::*;
 use serde::Deserialize;
 use serde::Serialize;
 use tokio::time::sleep;
 use tokio::time::Duration;
+use tracing::error;
+use tracing::info;
 
 // this is the target function we are using
 // #[allow(unused)]
@@ -47,41 +47,41 @@ impl Add {
 async fn async_queue_client(client: Client) -> Result<(), String> {
     let t = Add::new(1, 2);
     let result = client.submit(&t).await?;
-    let op = result.poll(Duration::from_secs(10)).await;
+    let op = client.poll_result(&result, Duration::from_secs(10)).await;
     if let Err(e) = op {
-        println!("did not receive value within 10s, {}", e);
+        error!("fail to fetch result, {}", e);
     } else {
-        println!("{:?}", op.unwrap());
+        info!("{:?}", op.unwrap());
     }
-    println!("done");
+    info!("client done");
     sleep(Duration::from_secs(2)).await;
     Ok(())
 }
 
 async fn async_queue_server(server: Server) -> Result<(), String> {
     server.start(2).await?;
-    println!("done");
+    info!("server done");
     Ok(())
 }
 
 #[tokio::main]
 async fn main() {
-    env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .init();
 
     let broker_url = "redis://127.0.0.1/";
-    let rbb = RedisBrokerBuilder::new(broker_url.to_owned());
-    let broker = rbb.build(10).await.unwrap();
-    let queue = "asyncq:test_queue".to_owned();
-    let name = "async-queue".to_owned();
-    let aq = AsyncQueue::new(name, queue, broker);
+    let queue = "asyncq:test_queue";
+    let name = "async-queue";
+    let aq = AsyncQueue::new(name, queue, broker_url).await;
     aq.register::<Add>().await.unwrap();
 
-    let client = aq.client().unwrap();
-    let server = aq.server().unwrap();
+    let client = aq.client().await.unwrap();
+    let server = aq.server().await.unwrap();
 
     let h = tokio::spawn(async_queue_server(server));
     async_queue_client(client).await.unwrap();
     let _ = h.await.unwrap();
 
-    println!("done");
+    info!("main done");
 }
