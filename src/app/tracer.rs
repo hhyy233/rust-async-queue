@@ -1,6 +1,5 @@
-use async_trait::async_trait;
-
 use super::{message::Message, task::AQTask};
+use async_trait::async_trait;
 
 #[async_trait]
 pub trait TracerTrait: Send + Sync {
@@ -32,7 +31,8 @@ where
 {
     async fn run(&mut self) -> Result<String, String> {
         let res = self.task.run();
-        serde_json::to_string(&res).map_err(|e| e.to_string())
+        let output = serde_json::to_string(&res).map_err(|e| e.to_string());
+        output
     }
 }
 
@@ -40,7 +40,7 @@ pub type TraceBuilderResult = Result<Box<dyn TracerTrait>, String>;
 
 pub type TraceBuilder = Box<dyn Fn(Message) -> TraceBuilderResult + Send + Sync + 'static>;
 
-pub fn build_tarce<T: AQTask + Send + Sync + 'static>(msg: Message) -> TraceBuilderResult {
+pub fn build_trace<T: AQTask + Send + Sync + 'static>(msg: Message) -> TraceBuilderResult {
     let payload = msg.get_payload();
     let params: T::Params = serde_json::from_slice(payload).map_err(|e| e.to_string())?;
     let task: T = T::from_params(params);

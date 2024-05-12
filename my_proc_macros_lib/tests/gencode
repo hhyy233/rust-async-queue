@@ -1,0 +1,107 @@
+#![feature(prelude_import)]
+#[prelude_import]
+use std::prelude::rust_2021::*;
+#[macro_use]
+extern crate std;
+use my_proc_macros_lib::fn_macro_ast_viz_debug;
+extern crate test;
+#[cfg(test)]
+#[rustc_test_marker = "test_proc_macro"]
+pub const test_proc_macro: test::TestDescAndFn = test::TestDescAndFn {
+    desc: test::TestDesc {
+        name: test::StaticTestName("test_proc_macro"),
+        ignore: false,
+        ignore_message: ::core::option::Option::None,
+        source_file: "my_proc_macros_lib/tests/test_macro.rs",
+        start_line: 4usize,
+        start_col: 4usize,
+        end_line: 4usize,
+        end_col: 19usize,
+        compile_fail: false,
+        no_run: false,
+        should_panic: test::ShouldPanic::No,
+        test_type: test::TestType::IntegrationTest,
+    },
+    testfn: test::StaticTestFn(
+        #[coverage(off)]
+        || test::assert_test_result(test_proc_macro()),
+    ),
+};
+fn test_proc_macro() {
+    fn foo() -> u32 {
+        42
+    }
+    match (&foo(), &42) {
+        (left_val, right_val) => {
+            if !(*left_val == *right_val) {
+                let kind = ::core::panicking::AssertKind::Eq;
+                ::core::panicking::assert_failed(
+                    kind,
+                    &*left_val,
+                    &*right_val,
+                    ::core::option::Option::None,
+                );
+            }
+        }
+    };
+}
+#[rustc_main]
+#[coverage(off)]
+pub fn main() -> () {
+    extern crate test;
+    test::test_main_static(&[&test_proc_macro])
+}
+
+
+meta => Meta::NameValue {
+    path: Path {
+        leading_colon: None,
+        segments: [
+            PathSegment {
+                ident: Ident {
+                    ident: "key",
+                    span: #0 bytes(2288..2291),
+                },
+                arguments: PathArguments::None,
+            },
+        ],
+    },
+    eq_token: Eq,
+    value: Expr::Lit {
+        attrs: [],
+        lit: Lit::Str {
+            token: "value",
+        },
+    },
+}
+item => ItemFn {
+    attrs: [],
+    vis: Visibility::Public(
+        Pub,
+    ),
+    sig: Signature {
+        constness: None,
+        asyncness: None,
+        unsafety: None,
+        abi: None,
+        fn_token: Fn,
+        ident: Ident {
+            ident: "some_annotated_function",
+            span: #0 bytes(2311..2334),
+        },
+        generics: Generics {
+            lt_token: None,
+            params: [],
+            gt_token: None,
+            where_clause: None,
+        },
+        paren_token: Paren,
+        inputs: [],
+        variadic: None,
+        output: ReturnType::Default,
+    },
+    block: Block {
+        brace_token: Brace,
+        stmts: [],
+    },
+}

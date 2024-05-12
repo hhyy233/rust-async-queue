@@ -82,7 +82,7 @@ impl AsyncQueue {
         if task_builders.contains_key(name) {
             return Err(format!("duplicate task {}", name));
         } else {
-            task_builders.insert(name.into(), Box::new(tracer::build_tarce::<T>));
+            task_builders.insert(name.into(), Box::new(tracer::build_trace::<T>));
         }
         Ok(())
     }
@@ -125,7 +125,7 @@ impl Client {
         let poll_fn = timeout(to, poll_fn(id, &self.broker));
         match poll_fn.await {
             Ok(Ok(res)) => {
-                let res: TaskReturn<T::Returns> = serde_json::from_str(&res)
+                let res: Result<T::Returns, String> = serde_json::from_str(&res)
                     .map_err(|e| format!("serde error: {}", e.to_string()));
                 Ok(res)
             }

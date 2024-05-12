@@ -1,0 +1,24 @@
+[package]
+name = "my_proc_macros_lib"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "my_proc_macros_lib"
+path = "src/lib.rs"
+proc-macro = true
+
+[dependencies]
+syn = { version = "*", features = ["extra-traits"] }
+quote = "*"
+proc-macro2 = "*"
+r3bl_rs_utils = "0.9.15"
+r3bl_rs_utils_core = "0.9.12"
+r3bl_rs_utils_macro = "0.9.8"
+async-trait = "0.1.79"
+
+[[example]]
+name = "custom_syntax"
+path = "examples/custom_syntax.rs"

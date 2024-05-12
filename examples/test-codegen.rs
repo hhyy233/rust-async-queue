@@ -1,6 +1,6 @@
-use rust_async_queue::codegen::my_custom_attribute;
+use rust_async_queue::task;
 
-#[my_custom_attribute(a, b)]
+#[rust_async_queue::task]
 fn add(x: i32, y: i32) -> i32 {
     x + y
 }

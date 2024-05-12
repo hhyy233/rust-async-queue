@@ -1,0 +1,520 @@
+TokenStream [
+    Ident {
+        ident: "named",
+        span: #0 bytes(358..363),
+    },
+    Ident {
+        ident: "MyMapManager",
+        span: #0 bytes(364..376),
+    },
+    Punct {
+        ch: '<',
+        spacing: Alone,
+        span: #0 bytes(376..377),
+    },
+    Ident {
+        ident: "K",
+        span: #0 bytes(377..378),
+    },
+    Punct {
+        ch: ',',
+        spacing: Alone,
+        span: #0 bytes(378..379),
+    },
+    Ident {
+        ident: "V",
+        span: #0 bytes(380..381),
+    },
+    Punct {
+        ch: '>',
+        spacing: Alone,
+        span: #0 bytes(381..382),
+    },
+    Ident {
+        ident: "where",
+        span: #0 bytes(391..396),
+    },
+    Ident {
+        ident: "K",
+        span: #0 bytes(397..398),
+    },
+    Punct {
+        ch: ':',
+        spacing: Alone,
+        span: #0 bytes(398..399),
+    },
+    Ident {
+        ident: "Default",
+        span: #0 bytes(400..407),
+    },
+    Punct {
+        ch: '+',
+        spacing: Alone,
+        span: #0 bytes(408..409),
+    },
+    Ident {
+        ident: "Send",
+        span: #0 bytes(410..414),
+    },
+    Punct {
+        ch: '+',
+        spacing: Alone,
+        span: #0 bytes(415..416),
+    },
+    Ident {
+        ident: "Sync",
+        span: #0 bytes(417..421),
+    },
+    Punct {
+        ch: '+',
+        spacing: Alone,
+        span: #0 bytes(422..423),
+    },
+    Punct {
+        ch: '\'',
+        spacing: Joint,
+        span: #0 bytes(424..431),
+    },
+    Ident {
+        ident: "static",
+        span: #0 bytes(424..431),
+    },
+    Punct {
+        ch: ',',
+        spacing: Alone,
+        span: #0 bytes(431..432),
+    },
+    Ident {
+        ident: "V",
+        span: #0 bytes(433..434),
+    },
+    Punct {
+        ch: ':',
+        spacing: Alone,
+        span: #0 bytes(434..435),
+    },
+    Ident {
+        ident: "Default",
+        span: #0 bytes(436..443),
+    },
+    Punct {
+        ch: '+',
+        spacing: Alone,
+        span: #0 bytes(444..445),
+    },
+    Ident {
+        ident: "Send",
+        span: #0 bytes(446..450),
+    },
+    Punct {
+        ch: '+',
+        spacing: Alone,
+        span: #0 bytes(451..452),
+    },
+    Ident {
+        ident: "Sync",
+        span: #0 bytes(453..457),
+    },
+    Punct {
+        ch: '+',
+        spacing: Alone,
+        span: #0 bytes(458..459),
+    },
+    Punct {
+        ch: '\'',
+        spacing: Joint,
+        span: #0 bytes(460..467),
+    },
+    Ident {
+        ident: "static",
+        span: #0 bytes(460..467),
+    },
+    Ident {
+        ident: "containing",
+        span: #0 bytes(476..486),
+    },
+    Ident {
+        ident: "my_map",
+        span: #0 bytes(487..493),
+    },
+    Ident {
+        ident: "of_type",
+        span: #0 bytes(502..509),
+    },
+    Ident {
+        ident: "std",
+        span: #0 bytes(510..513),
+    },
+    Punct {
+        ch: ':',
+        spacing: Joint,
+        span: #0 bytes(513..514),
+    },
+    Punct {
+        ch: ':',
+        spacing: Alone,
+        span: #0 bytes(514..515),
+    },
+    Ident {
+        ident: "collections",
+        span: #0 bytes(515..526),
+    },
+    Punct {
+        ch: ':',
+        spacing: Joint,
+        span: #0 bytes(526..527),
+    },
+    Punct {
+        ch: ':',
+        spacing: Alone,
+        span: #0 bytes(527..528),
+    },
+    Ident {
+        ident: "HashMap",
+        span: #0 bytes(528..535),
+    },
+    Punct {
+        ch: '<',
+        spacing: Alone,
+        span: #0 bytes(535..536),
+    },
+    Ident {
+        ident: "K",
+        span: #0 bytes(536..537),
+    },
+    Punct {
+        ch: ',',
+        spacing: Alone,
+        span: #0 bytes(537..538),
+    },
+    Ident {
+        ident: "V",
+        span: #0 bytes(539..540),
+    },
+    Punct {
+        ch: '>',
+        spacing: Alone,
+        span: #0 bytes(540..541),
+    },
+]
+
+
+
+manager_type => Type::Path {
+    qself: None,
+    path: Path {
+        leading_colon: None,
+        segments: [
+            PathSegment {
+                ident: Ident {
+                    ident: "MyMapManager",
+                    span: #0 bytes(364..376),
+                },
+                arguments: PathArguments::AngleBracketed {
+                    colon2_token: None,
+                    lt_token: Lt,
+                    args: [
+                        GenericArgument::Type(
+                            Type::Path {
+                                qself: None,
+                                path: Path {
+                                    leading_colon: None,
+                                    segments: [
+                                        PathSegment {
+                                            ident: Ident {
+                                                ident: "K",
+                                                span: #0 bytes(377..378),
+                                            },
+                                            arguments: PathArguments::None,
+                                        },
+                                    ],
+                                },
+                            },
+                        ),
+                        Comma,
+                        GenericArgument::Type(
+                            Type::Path {
+                                qself: None,
+                                path: Path {
+                                    leading_colon: None,
+                                    segments: [
+                                        PathSegment {
+                                            ident: Ident {
+                                                ident: "V",
+                                                span: #0 bytes(380..381),
+                                            },
+                                            arguments: PathArguments::None,
+                                        },
+                                    ],
+                                },
+                            },
+                        ),
+                    ],
+                    gt_token: Gt,
+                },
+            },
+        ],
+    },
+}
+where => WhereClause {
+    where_token: Where,
+    predicates: [
+        WherePredicate::Type(
+            PredicateType {
+                lifetimes: None,
+                bounded_ty: Type::Path {
+                    qself: None,
+                    path: Path {
+                        leading_colon: None,
+                        segments: [
+                            PathSegment {
+                                ident: Ident {
+                                    ident: "K",
+                                    span: #0 bytes(397..398),
+                                },
+                                arguments: PathArguments::None,
+                            },
+                        ],
+                    },
+                },
+                colon_token: Colon,
+                bounds: [
+                    TypeParamBound::Trait(
+                        TraitBound {
+                            paren_token: None,
+                            modifier: TraitBoundModifier::None,
+                            lifetimes: None,
+                            path: Path {
+                                leading_colon: None,
+                                segments: [
+                                    PathSegment {
+                                        ident: Ident {
+                                            ident: "Default",
+                                            span: #0 bytes(400..407),
+                                        },
+                                        arguments: PathArguments::None,
+                                    },
+                                ],
+                            },
+                        },
+                    ),
+                    Plus,
+                    TypeParamBound::Trait(
+                        TraitBound {
+                            paren_token: None,
+                            modifier: TraitBoundModifier::None,
+                            lifetimes: None,
+                            path: Path {
+                                leading_colon: None,
+                                segments: [
+                                    PathSegment {
+                                        ident: Ident {
+                                            ident: "Send",
+                                            span: #0 bytes(410..414),
+                                        },
+                                        arguments: PathArguments::None,
+                                    },
+                                ],
+                            },
+                        },
+                    ),
+                    Plus,
+                    TypeParamBound::Trait(
+                        TraitBound {
+                            paren_token: None,
+                            modifier: TraitBoundModifier::None,
+                            lifetimes: None,
+                            path: Path {
+                                leading_colon: None,
+                                segments: [
+                                    PathSegment {
+                                        ident: Ident {
+                                            ident: "Sync",
+                                            span: #0 bytes(417..421),
+                                        },
+                                        arguments: PathArguments::None,
+                                    },
+                                ],
+                            },
+                        },
+                    ),
+                    Plus,
+                    TypeParamBound::Lifetime {
+                        apostrophe: #0 bytes(424..431),
+                        ident: Ident {
+                            ident: "static",
+                            span: #0 bytes(424..431),
+                        },
+                    },
+                ],
+            },
+        ),
+        Comma,
+        WherePredicate::Type(
+            PredicateType {
+                lifetimes: None,
+                bounded_ty: Type::Path {
+                    qself: None,
+                    path: Path {
+                        leading_colon: None,
+                        segments: [
+                            PathSegment {
+                                ident: Ident {
+                                    ident: "V",
+                                    span: #0 bytes(433..434),
+                                },
+                                arguments: PathArguments::None,
+                            },
+                        ],
+                    },
+                },
+                colon_token: Colon,
+                bounds: [
+                    TypeParamBound::Trait(
+                        TraitBound {
+                            paren_token: None,
+                            modifier: TraitBoundModifier::None,
+                            lifetimes: None,
+                            path: Path {
+                                leading_colon: None,
+                                segments: [
+                                    PathSegment {
+                                        ident: Ident {
+                                            ident: "Default",
+                                            span: #0 bytes(436..443),
+                                        },
+                                        arguments: PathArguments::None,
+                                    },
+                                ],
+                            },
+                        },
+                    ),
+                    Plus,
+                    TypeParamBound::Trait(
+                        TraitBound {
+                            paren_token: None,
+                            modifier: TraitBoundModifier::None,
+                            lifetimes: None,
+                            path: Path {
+                                leading_colon: None,
+                                segments: [
+                                    PathSegment {
+                                        ident: Ident {
+                                            ident: "Send",
+                                            span: #0 bytes(446..450),
+                                        },
+                                        arguments: PathArguments::None,
+                                    },
+                                ],
+                            },
+                        },
+                    ),
+                    Plus,
+                    TypeParamBound::Trait(
+                        TraitBound {
+                            paren_token: None,
+                            modifier: TraitBoundModifier::None,
+                            lifetimes: None,
+                            path: Path {
+                                leading_colon: None,
+                                segments: [
+                                    PathSegment {
+                                        ident: Ident {
+                                            ident: "Sync",
+                                            span: #0 bytes(453..457),
+                                        },
+                                        arguments: PathArguments::None,
+                                    },
+                                ],
+                            },
+                        },
+                    ),
+                    Plus,
+                    TypeParamBound::Lifetime {
+                        apostrophe: #0 bytes(460..467),
+                        ident: Ident {
+                            ident: "static",
+                            span: #0 bytes(460..467),
+                        },
+                    },
+                ],
+            },
+        ),
+    ],
+}
+name => Ident {
+    ident: "my_map",
+    span: #0 bytes(487..493),
+}
+type => Type::Path {
+    qself: None,
+    path: Path {
+        leading_colon: None,
+        segments: [
+            PathSegment {
+                ident: Ident {
+                    ident: "std",
+                    span: #0 bytes(510..513),
+                },
+                arguments: PathArguments::None,
+            },
+            PathSep,
+            PathSegment {
+                ident: Ident {
+                    ident: "collections",
+                    span: #0 bytes(515..526),
+                },
+                arguments: PathArguments::None,
+            },
+            PathSep,
+            PathSegment {
+                ident: Ident {
+                    ident: "HashMap",
+                    span: #0 bytes(528..535),
+                },
+                arguments: PathArguments::AngleBracketed {
+                    colon2_token: None,
+                    lt_token: Lt,
+                    args: [
+                        GenericArgument::Type(
+                            Type::Path {
+                                qself: None,
+                                path: Path {
+                                    leading_colon: None,
+                                    segments: [
+                                        PathSegment {
+                                            ident: Ident {
+                                                ident: "K",
+                                                span: #0 bytes(536..537),
+                                            },
+                                            arguments: PathArguments::None,
+                                        },
+                                    ],
+                                },
+                            },
+                        ),
+                        Comma,
+                        GenericArgument::Type(
+                            Type::Path {
+                                qself: None,
+                                path: Path {
+                                    leading_colon: None,
+                                    segments: [
+                                        PathSegment {
+                                            ident: Ident {
+                                                ident: "V",
+                                                span: #0 bytes(539..540),
+                                            },
+                                            arguments: PathArguments::None,
+                                        },
+                                    ],
+                                },
+                            },
+                        ),
+                    ],
+                    gt_token: Gt,
+                },
+            },
+        ],
+    },
+}
