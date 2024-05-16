@@ -8,6 +8,7 @@ use tracing::info;
 
 use crate::app::message::Message;
 use crate::broker::Broker;
+use crate::error::WorkerError;
 
 use super::AsyncQueue;
 
@@ -48,7 +49,7 @@ impl Worker {
                 Ok(val) => {
                     info!(worker = idx, "got {}", val);
                     if let Err(e) = self.handle(val).await {
-                        error!(worker = idx, "got error handl task {}", e);
+                        error!(worker = idx, "got error handle task {}", e);
                     }
                 }
                 Err(e) => {
@@ -62,10 +63,10 @@ impl Worker {
         info!(worker = idx, "stopped");
     }
 
-    async fn handle(&self, val: String) -> Result<(), String> {
+    async fn handle(&self, val: String) -> Result<(), WorkerError> {
         let idx = self.id;
 
-        let msg: Message = serde_json::from_str(&val[..]).map_err(|e| e.to_string())?;
+        let msg: Message = serde_json::from_str(&val[..])?;
         let id = msg.get_id();
         let name = msg.get_name();
 
@@ -78,8 +79,8 @@ impl Worker {
         Ok(())
     }
 
-    async fn handle_message(&self, name: String, msg: Message) -> Result<String, String> {
+    async fn handle_message(&self, name: String, msg: Message) -> Result<String, WorkerError> {
         let mut tracer = self.app.get_tracer(name, msg).await?;
-        tracer.run().await
+        tracer.run().await.map_err(|e| e.into())
     }
 }

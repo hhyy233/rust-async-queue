@@ -1,4 +1,5 @@
 use super::{Broker, BrokerBuilder};
+use crate::error::BrokerError;
 use async_trait::async_trait;
 use redis::aio::ConnectionManager;
 use redis::Client;
@@ -23,12 +24,8 @@ impl BrokerBuilder for RedisBrokerBuilder {
         };
     }
 
-    async fn build(&self, _timeout: u32) -> Result<Box<dyn Broker>, String> {
-        let manager = self
-            .client
-            .get_tokio_connection_manager()
-            .await
-            .map_err(|e| e.to_string())?;
+    async fn build(&self, _timeout: u32) -> Result<Box<dyn Broker>, BrokerError> {
+        let manager = self.client.get_tokio_connection_manager().await?;
         return Ok(Box::new(RedisBroker { manager }));
     }
 }
@@ -40,37 +37,33 @@ pub struct RedisBroker {
 
 #[async_trait]
 impl Broker for RedisBroker {
-    async fn get(&self, key: &String) -> Result<Option<String>, String> {
+    async fn get(&self, key: &String) -> Result<Option<String>, BrokerError> {
         let mut conn = self.manager.clone();
-        let res = redis::cmd("GET")
-            .arg(key)
-            .query_async(&mut conn)
-            .await
-            .map_err(|e| e.to_string())?;
+        let res = redis::cmd("GET").arg(key).query_async(&mut conn).await?;
         return Ok(res);
     }
 
-    async fn set(&self, key: &String, val: &String) -> Result<(), String> {
+    async fn set(&self, key: &String, val: &String) -> Result<(), BrokerError> {
         let mut conn = self.manager.clone();
         redis::cmd("SET")
             .arg(key)
             .arg(val)
             .query_async(&mut conn)
             .await
-            .map_err(|e| e.to_string())
+            .map_err(|e| e.into())
     }
 
-    async fn enqueue(&self, queue: &String, val: &String) -> Result<(), String> {
+    async fn enqueue(&self, queue: &String, val: &String) -> Result<(), BrokerError> {
         let mut conn = self.manager.clone();
         redis::cmd("RPUSH")
             .arg(queue)
             .arg(val)
             .query_async(&mut conn)
             .await
-            .map_err(|e| e.to_string())
+            .map_err(|e| e.into())
     }
 
-    async fn dequeue(&self, queue: &String) -> Result<Option<(String, String)>, String> {
+    async fn dequeue(&self, queue: &String) -> Result<Option<(String, String)>, BrokerError> {
         // we should create a new connection for blocking command.
         // https://github.com/redis-rs/redis-rs/issues/453
         let mut conn = self.manager.clone();
@@ -79,6 +72,6 @@ impl Broker for RedisBroker {
             .arg(0) // no timeout
             .query_async(&mut conn)
             .await
-            .map_err(|e| e.to_string())
+            .map_err(|e| e.into())
     }
 }

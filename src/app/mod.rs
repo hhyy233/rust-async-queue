@@ -16,6 +16,7 @@ use crate::async_result::AsyncResult;
 use crate::broker::Broker;
 use crate::broker::BrokerBuilder;
 use crate::broker::RedisBrokerBuilder;
+use crate::error::{ClientError, QueueError, ServerError, TracerError};
 
 use signal::*;
 use std::collections::HashMap;
@@ -53,7 +54,7 @@ impl AsyncQueue {
         })
     }
 
-    pub async fn client(self: &Arc<Self>) -> Result<Client, String> {
+    pub async fn client(self: &Arc<Self>) -> Result<Client, QueueError> {
         let broker = self.broker_builder.build(self.timeout).await?;
         Ok(Client {
             queue: self.queue.clone(),
@@ -61,7 +62,7 @@ impl AsyncQueue {
         })
     }
 
-    pub async fn server(self: &Arc<Self>) -> Result<Server, String> {
+    pub async fn server(self: &Arc<Self>) -> Result<Server, QueueError> {
         let broker = self.broker_builder.build(self.timeout).await?;
         Ok(Server {
             app: self.clone(),
@@ -76,11 +77,11 @@ impl AsyncQueue {
         self.name.clone()
     }
 
-    pub async fn register<T: AQTask + 'static>(&self) -> Result<(), String> {
+    pub async fn register<T: AQTask + 'static>(&self) -> Result<(), QueueError> {
         let name = T::NAME;
         let mut task_builders = self.task_builders.write().await;
         if task_builders.contains_key(name) {
-            return Err(format!("duplicate task {}", name));
+            return Err(QueueError::DuplicateTask(name.into()));
         } else {
             task_builders.insert(name.into(), Box::new(tracer::build_trace::<T>));
         }
@@ -91,13 +92,13 @@ impl AsyncQueue {
         self: &Arc<Self>,
         name: String,
         msg: Message,
-    ) -> Result<Box<dyn TracerTrait>, String> {
+    ) -> Result<Box<dyn TracerTrait>, TracerError> {
         let task_builders = self.task_builders.read().await;
         if let Some(builder) = task_builders.get(&name) {
             let t = builder(msg)?;
             Ok(t)
         } else {
-            Err(format!("task not found: {}", name))
+            Err(TracerError::TaskNotFound(name))
         }
     }
 }
@@ -108,7 +109,7 @@ pub struct Client {
 }
 
 impl Client {
-    pub async fn submit<T: AQTask>(&self, s: &Signature<T>) -> Result<AsyncResult<T>, String> {
+    pub async fn submit<T: AQTask>(&self, s: &Signature<T>) -> Result<AsyncResult<T>, ClientError> {
         let msg = Message::try_from(s)?;
         let output = msg.serialize()?;
         self.broker.enqueue(&self.queue, &output).await?;
@@ -120,22 +121,21 @@ impl Client {
         &self,
         result: &AsyncResult<T>,
         to: Duration,
-    ) -> Result<TaskReturn<T::Returns>, String> {
+    ) -> Result<TaskReturn<T::Returns>, ClientError> {
         let id = result.get_id();
         let poll_fn = timeout(to, poll_fn(id, &self.broker));
         match poll_fn.await {
             Ok(Ok(res)) => {
-                let res: Result<T::Returns, String> = serde_json::from_str(&res)
-                    .map_err(|e| format!("serde error: {}", e.to_string()));
+                let res: TaskReturn<T::Returns> = serde_json::from_str(&res).map_err(|e| e.into());
                 Ok(res)
             }
-            Ok(Err(e)) => Err(format!("broker error: {}", e.to_string())),
-            Err(e) => Err(e.to_string()),
+            Ok(Err(e)) => Err(e),
+            Err(e) => Err(e.into()),
         }
     }
 }
 
-async fn poll_fn(id: String, broker: &Box<dyn Broker>) -> Result<String, String> {
+async fn poll_fn(id: String, broker: &Box<dyn Broker>) -> Result<String, ClientError> {
     loop {
         debug!("start polling");
         match broker.get(&id).await? {
@@ -158,7 +158,7 @@ pub struct Server {
 }
 
 impl Server {
-    pub async fn start(&self, num: i32) -> Result<(), String> {
+    pub async fn start(&self, num: i32) -> Result<(), ServerError> {
         info!("server start");
         // channel for tasks
         let (tx, rx) = async_channel::bounded(num as usize);
@@ -189,12 +189,12 @@ impl Server {
         &self,
         tx: async_channel::Sender<String>,
         mut token_rx: mpsc::Receiver<()>,
-    ) -> Result<(), String> {
+    ) -> Result<(), ServerError> {
         // this is the flag indicate if we hold a token,
         // which means that there is a free worker waiting
         // and we are fine to poll a task from broker.
         let mut flag = false;
-        let mut ender = Ender::new().map_err(|e| e.to_string())?;
+        let mut ender = Ender::new()?;
         info!("scheduler start");
         loop {
             select! {

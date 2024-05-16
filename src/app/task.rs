@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-pub type TaskReturn<R> = Result<R, String>;
+use crate::error::TaskError;
+
+pub type TaskReturn<R> = Result<R, TaskError>;
 
 pub trait AQTask: Send + Sync {
     const NAME: &'static str;

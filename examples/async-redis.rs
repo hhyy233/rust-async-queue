@@ -1,3 +1,4 @@
+use rust_async_queue::error::TaskError;
 use rust_async_queue::{self, app::*};
 use tokio::time::sleep;
 use tokio::time::Duration;
@@ -11,6 +12,8 @@ fn add(x: i32, y: i32) -> i32 {
 }
 
 /*
+the above code would expend to something like below:
+
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 struct addParam {
     x: i32,
@@ -48,13 +51,16 @@ impl add {
 
 async fn async_queue_client(client: Client) -> Result<(), String> {
     let t = add::new(1, 2);
-    let result = client.submit(&t).await?;
+    let result = client.submit(&t).await.map_err(|e| e.to_string())?;
     let op = client.poll_result(&result, Duration::from_secs(10)).await;
     match op {
-        Ok(res) => {
-            info!("got result {:?}", res);
-            assert_eq!(Ok(3), res, "want {:?}, got {:?}", 3, res);
-        }
+        Ok(res) => match res {
+            Ok(val) => {
+                info!("got result {:?}", res);
+                assert_eq!(3, val, "want {:?}, got {:?}", 3, val);
+            }
+            Err(e) => error!("fail to run task, {}", e),
+        },
         Err(e) => error!("fail to fetch result, {}", e),
     }
     info!("client done");
@@ -63,7 +69,7 @@ async fn async_queue_client(client: Client) -> Result<(), String> {
 }
 
 async fn async_queue_server(server: Server) -> Result<(), String> {
-    server.start(2).await?;
+    server.start(2).await.map_err(|e| e.to_string())?;
     info!("server done");
     Ok(())
 }
